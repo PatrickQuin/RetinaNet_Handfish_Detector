@@ -1,0 +1,13 @@
+# Path to the dataset
+path: ./data/fold2/
+
+# Paths to training and validation image directories
+train: images/train
+val: images/val
+
+# Number of classes
+nc: 1  # Update this to the number of classes in your dataset
+
+# Class names
+names:
+  0: Brachionichthyidae  # Replace with your class names
