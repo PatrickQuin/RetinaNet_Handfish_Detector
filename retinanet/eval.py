@@ -1,10 +1,10 @@
 import torch
 
 from tqdm import tqdm
-from config import DEVICE, NUM_CLASSES, NUM_WORKERS
+from retina_net.config import DEVICE, NUM_CLASSES, NUM_WORKERS
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from model import create_model
-from datasets import create_valid_dataset, create_valid_loader
+from retina_net.model import create_model
+from retina_net.datasets import create_valid_dataset, create_valid_loader
 
 # Evaluation function
 def validate(valid_data_loader, model):

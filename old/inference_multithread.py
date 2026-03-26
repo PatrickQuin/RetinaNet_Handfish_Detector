@@ -8,7 +8,7 @@ import argparse
 from xml.etree import ElementTree as et
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from model import create_model
+from retina_net.model import create_model
 
 # Constants
 CLASSES = ['__background__', 'Brachionichthyidae']

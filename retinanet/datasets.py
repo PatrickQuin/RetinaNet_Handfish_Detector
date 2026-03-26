@@ -1,3 +1,5 @@
+import shutil
+
 import torch
 import cv2
 import numpy as np
@@ -5,11 +7,11 @@ import os
 import glob as glob
 from xml.etree import ElementTree as et
 
-from config import (
+from retina_net.config import (
     CLASSES, RESIZE_TO, TRAIN_DIR, BATCH_SIZE
 )
 from torch.utils.data import Dataset, DataLoader
-from custom_utils import collate_fn, get_train_transform, get_valid_transform
+from retina_net.custom_utils import collate_fn, get_train_transform, get_valid_transform
 
 # The dataset class.
 class CustomDataset(Dataset):
@@ -123,6 +125,11 @@ class CustomDataset(Dataset):
         return len(self.all_images)
 
 # Prepare the final datasets and data loaders.
+def create_trainval_dataset(DIR):
+    trainval_dataset = CustomDataset(
+        DIR, RESIZE_TO, RESIZE_TO, CLASSES, get_train_transform()
+    )
+    return trainval_dataset
 def create_train_dataset(DIR):
     train_dataset = CustomDataset(
         DIR, RESIZE_TO, RESIZE_TO, CLASSES, get_train_transform()
@@ -193,3 +200,31 @@ if __name__ == '__main__':
     for i in range(NUM_SAMPLES_TO_VISUALIZE):
         image, target = dataset[i]
         visualize_sample(image, target)
+
+    # Split dataset into train and test sets
+    dataset_dir = 'data/unaltered'
+    train_path = 'data/trainval'
+    test_path = 'data/test'
+    
+    image_file_names = []
+    annotation_file_names = []
+    for file in os.listdir(dataset_dir):
+        if file.endswith('.jpg'):
+            image_file_names.append(file)
+        if file.endswith('.xml'):
+            annotation_file_names.append(file)
+    
+    x_trainval, x_test, y_trainval, y_test = train_test_split(
+        image_file_names, annotation_file_names, test_size=0.1, random_state=42, stratify=image_file_names
+    )
+
+    os.makedirs(train_path, exist_ok=True)
+    os.makedirs(test_path, exist_ok=True)
+    for file in x_trainval:
+        shutil.move(os.path.join(dataset_dir, file), os.path.join(train_path, file))
+        shutil.move(os.path.join(dataset_dir, file), os.path.join(train_path, file[:-3] + 'xml'))
+    for file in x_test:
+        shutil.copy(os.path.join(dataset_dir, file), os.path.join(test_path, file))
+        shutil.copy(os.path.join(dataset_dir, file), os.path.join(test_path, file[:-3] + 'xml'))
+    
+    

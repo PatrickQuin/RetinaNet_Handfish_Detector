@@ -5,7 +5,7 @@ import torch
 import matplotlib.pyplot as plt
 
 from albumentations.pytorch import ToTensorV2
-from config import DEVICE, CLASSES, RESIZE_TO
+from retina_net.config import DEVICE, CLASSES, RESIZE_TO
 
 plt.style.use('ggplot')
 

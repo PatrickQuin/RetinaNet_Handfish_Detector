@@ -1,4 +1,4 @@
-from config import (
+from retina_net.config import (
     DEVICE, 
     NUM_CLASSES, 
     NUM_EPOCHS, 
@@ -8,8 +8,8 @@ from config import (
     NUM_WORKERS
 )
 
-from model import create_model
-from custom_utils import (
+from retina_net.model import create_model
+from retina_net.custom_utils import (
     Averager, 
     SaveBestModel, 
     save_model, 
@@ -17,7 +17,8 @@ from custom_utils import (
     save_mAP
 )
 from tqdm.auto import tqdm
-from datasets import (
+from retina_net.datasets import (
+    create_trainval_dataset,
     create_train_dataset, 
     create_valid_dataset, 
     create_train_loader, 
@@ -30,6 +31,8 @@ import torch
 import matplotlib.pyplot as plt
 import time
 import os
+from sklearn.model_selection import train_test_split, KFold
+
 
 plt.style.use('ggplot')
 
@@ -131,28 +134,35 @@ if __name__ == '__main__':
     # Name to save the trained model with.
     MODEL_NAME = 'model'
 
+    # Path to data
+    trainval_dir = 'data/trainval'
+    trainval_dataset = create_trainval_dataset(trainval_dir)
+
     # To save best model.
     save_best_model = SaveBestModel()
 
     metric = MeanAveragePrecision()
 
-    for fold in range(NUM_FOLDS):
+    # Define number of splits for K-Fold Cross Validation.
+    kf = KFold(n_splits=NUM_FOLDS, shuffle=True, random_state=seed)
+
+    fold = 0
+    for train_index, val_index in kf.split(trainval_dataset):
         print(f"\nSTARTING NEXT FOLD: FOLD {fold+1} of {NUM_FOLDS}")
-        train_dir = f'data/fold_{fold}/train'
-        val_dir = f'data/fold_{fold}/val'
-        # Create the datasets and data loaders.
-        print(f"Training directory: {train_dir}")
-        print(f"Validation directory: {val_dir}")
-        train_dataset = create_train_dataset(train_dir)
-        valid_dataset = create_valid_dataset(val_dir)
+
+        # Create the datasets and data loaders using the test val splits
+        train_dataset = trainval_dataset[train_index]
+        val_dataset = trainval_dataset[val_index]
+
         train_loader = create_train_loader(train_dataset, NUM_WORKERS)
-        valid_loader = create_valid_loader(valid_dataset, NUM_WORKERS)
+        valid_loader = create_valid_loader(val_dataset, NUM_WORKERS)
+
         print(f"Number of training samples: {len(train_dataset)}")
-        print(f"Number of validation samples: {len(valid_dataset)}\n")
-        
+        print(f"Number of validation samples: {len(val_dataset)}\n")
+
         # Whether to show transformed images from data loader or not.
         if VISUALIZE_TRANSFORMED_IMAGES:
-            from custom_utils import show_tranformed_image
+            from retina_net.custom_utils import show_tranformed_image
             show_tranformed_image(train_loader)
 
         # Training loop.
@@ -190,3 +200,4 @@ if __name__ == '__main__':
             # Save mAP plot.
             save_mAP(OUT_DIR, map_50_list, map_list)
             # scheduler.step()
+        fold += 1

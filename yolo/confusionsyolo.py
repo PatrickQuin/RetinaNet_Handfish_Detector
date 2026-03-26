@@ -6,10 +6,10 @@ import numpy as np
 import cv2
 import glob as glob
 import time
-import argparse
+from ultralytics import YOLO
 from xml.etree import ElementTree as ET
 
-from model import create_model
+from retina_net.model import create_model
 
 CLASSES = [
     '__background__', 'Brachionichthyidae'
@@ -18,52 +18,24 @@ NUM_CLASSES = len(CLASSES)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 COLORS = [(0, 0, 255) for _ in CLASSES]  # BGR for red in OpenCV
 
-# Replace this with your actual detection function
-def get_detections(image_path, model, threshold=0.25, imgsz=None):
+def get_detections(image_path, model, threshold=0.25, imgsz=640):
+    """
+    Perform inference using a YOLO model and return detections.
+    """
+    # Perform inference
+    results = model.predict(source=image_path, conf=threshold, imgsz=imgsz, device=DEVICE, verbose=False)
 
-    image = cv2.imread(image_path)
-    orig_image = image.copy()
-    
-    if imgsz is not None:
-        image = cv2.resize(image, (imgsz, imgsz))
-        
-    # BGR to RGB and normalize
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
-    image /= 255.0
-    image_input = np.transpose(image, (2, 0, 1)).astype(np.float32)
-    image_input = torch.tensor(image_input, dtype=torch.float).unsqueeze(0).to(DEVICE)
-
-    with torch.no_grad():
-        outputs = model(image_input)
-
-    outputs = [{k: v.to('cpu') for k, v in t.items()} for t in outputs]
-    
+    # Extract detections
     detections = []
-    if len(outputs[0]['boxes']) != 0:
-        boxes = outputs[0]['boxes'].data.numpy()
-        scores = outputs[0]['scores'].data.numpy()
-        labels = outputs[0]['labels'].cpu().numpy()
+    for result in results:
+        boxes = result.boxes.xyxy.cpu().numpy()  # Bounding boxes (x_min, y_min, x_max, y_max)
+        scores = result.boxes.conf.cpu().numpy()  # Confidence scores
+        labels = result.boxes.cls.cpu().numpy().astype(int)  # Class labels
 
-        boxes = boxes[scores >= threshold].astype(np.int32)
         for i, box in enumerate(boxes):
-            detections.append(box.tolist())
+            if scores[i] >= threshold:
+                detections.append(box.tolist())  # Append bounding box
 
-            # Optionally draw for debug
-            class_name = CLASSES[labels[i]]
-            color = COLORS[CLASSES.index(class_name)]
-            cv2.rectangle(orig_image,
-                          (box[0], box[1]), (box[2], box[3]),
-                          color[::-1], 2)
-            cv2.putText(orig_image, class_name, 
-                        (box[0], box[1]-10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, 
-                        color[::-1], 2)
-
-    # Optional save/debug
-    #os.makedirs('inference_outputs/images', exist_ok=True)
-    #image_name = os.path.splitext(os.path.basename(image_path))[0]
-    #cv2.imwrite(f'inference_outputs/images/{image_name}.jpg', orig_image)
-    print(f'IMAGE DONE {image_path}')
     return detections
 
 
@@ -97,17 +69,27 @@ def iou(boxA, boxB):
 def evaluate_detector(directory, model, iou_threshold=0.0):
     from collections import Counter
 
+    frame_count = 0 # To count total frames.
+    total_fps = 0 # To get the final frames per second.
+
     y_true = []
     y_pred = []
-
+    count = 1
     for filename in os.listdir(directory):
+
         if not filename.lower().endswith((".jpg", ".jpeg", ".png")):
             continue
 
         image_path = os.path.join(directory, filename)
         base_name = os.path.splitext(filename)[0]
         xml_path = os.path.join(directory, base_name + ".xml")
+        start_time = time.time()
         detections = get_detections(image_path, model)  # List of [xmin, ymin, xmax, ymax]
+        end_time = time.time()
+        fps = 1 / (end_time - start_time)
+        # Total FPS till current frame.
+        total_fps += fps
+        frame_count += 1
 
         has_annotation = os.path.exists(xml_path)
 
@@ -131,8 +113,13 @@ def evaluate_detector(directory, model, iou_threshold=0.0):
             # No object is present
             y_true.append(0)
             y_pred.append(1 if detections else 0)
+            # Get the current fps.
+        print(f"Image: {count}" )
+        count += 1
 
     # Confusion matrix
+    avg_fps = total_fps / frame_count
+    print(f"Average FPS: {avg_fps:.3f}")
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Handfish", "Handfish"])
     disp.plot(cmap="Reds")

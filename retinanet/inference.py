@@ -7,7 +7,7 @@ import time
 import argparse
 from xml.etree import ElementTree as et
 
-from model import create_model
+from retina_net.model import create_model
 
 CLASSES = [
     '__background__', 'Brachionichthyidae'
