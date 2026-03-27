@@ -1,0 +1,26 @@
+<annotation>
+	<folder>Handfish Detections - Human and AI generated</folder>
+	<filename>PR_20230312_012300_185_FC16.jpg</filename>
+	<path>C:\Users\pmqui\OneDrive\Desktop\Honours\Few_shot_model_training\media_collection\Handfish Detections - Human and AI generated\PR_20230312_012300_185_FC16.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>2752</width>
+		<height>2200</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Brachionichthyidae</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>534</xmin>
+			<ymin>208</ymin>
+			<xmax>658</xmax>
+			<ymax>280</ymax>
+		</bndbox>
+	</object>
+</annotation>
