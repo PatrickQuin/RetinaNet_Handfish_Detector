@@ -16,7 +16,7 @@ if __package__ is None or __package__ == '':
         sys.path.insert(0, project_root)
 
 from retina_net.config import (
-    CLASSES, RESIZE_TO, TRAIN_DIR, BATCH_SIZE
+    CLASSES, RESIZE_TO, DATASET_PATH, BATCH_SIZE, TEST_DIR, TRAIN_DIR
 )
 from torch.utils.data import Dataset, DataLoader
 from retina_net.custom_utils import collate_fn, get_train_transform, get_valid_transform
@@ -224,10 +224,10 @@ if __name__ == '__main__':
     #     visualize_sample(image, target)
 
     # Split dataset into train and test sets
-    dataset_dir = Path(r'D:\Patrick_PAST_UNI_STUFF\Honours\Handfish Detections\Handfish Detections - Human - Tight Boxes')
+    dataset_dir = Path(DATASET_PATH)
     project_root = Path(__file__).resolve().parents[1]
-    train_path = project_root / 'retina_net' / 'data' / 'trainval'
-    test_path = project_root / 'retina_net' / 'data' / 'test'
+    train_path = project_root / 'retina_net' / TRAIN_DIR
+    test_path = project_root / 'retina_net' / TEST_DIR
 
     if not dataset_dir.exists():
         raise FileNotFoundError(f"Dataset directory not found: {dataset_dir}")

@@ -23,7 +23,8 @@ from retina_net.config import (
 from retina_net.model import create_model
 from retina_net.custom_utils import (
     Averager, 
-    SaveBestModel, 
+    SaveBestModel,
+    save_confusion_matrix, 
     save_model, 
     save_loss_plot,
     save_mAP
@@ -218,9 +219,10 @@ if __name__ == '__main__':
             save_model(epoch, model, optimizer)
 
             # Save loss plot.
-            save_loss_plot(OUT_DIR, train_loss_list)
+            save_loss_plot(OUT_DIR, train_loss_list, fold_num=fold)
 
             # Save mAP plot.
-            save_mAP(OUT_DIR, map_50_list, map_list)
+            save_mAP(OUT_DIR, map_50_list, map_list, fold_num=fold)
             # scheduler.step()
+
         fold += 1

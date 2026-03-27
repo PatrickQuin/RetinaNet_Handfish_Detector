@@ -138,7 +138,8 @@ def save_loss_plot(
     train_loss_list, 
     x_label='iterations',
     y_label='train loss',
-    save_name='train_loss'
+    save_name='train_loss',
+    fold_num=None
 ):
     """
     Function to save both train loss graph.
@@ -151,10 +152,13 @@ def save_loss_plot(
     train_ax.plot(train_loss_list, color='tab:blue')
     train_ax.set_xlabel(x_label)
     train_ax.set_ylabel(y_label)
-    figure_1.savefig(f"{OUT_DIR}/{save_name}.png")
+    if fold_num is not None:
+        figure_1.savefig(f"{OUT_DIR}/{save_name}_fold_{fold_num}.png")
+    else:
+        figure_1.savefig(f"{OUT_DIR}/{save_name}.png")
     print('SAVING PLOTS COMPLETE...')
 
-def save_mAP(OUT_DIR, map_05, map):
+def save_mAP(OUT_DIR, map_05, map, fold_num=None):
     """
     Saves the mAP@0.5 and mAP@0.5:0.95 per epoch.
     :param OUT_DIR: Path to save the graphs.
@@ -174,4 +178,7 @@ def save_mAP(OUT_DIR, map_05, map):
     ax.set_xlabel('Epochs')
     ax.set_ylabel('mAP')
     ax.legend()
-    figure.savefig(f"{OUT_DIR}/map.png")
+    if fold_num is not None:
+        figure.savefig(f"{OUT_DIR}/map_fold_{fold_num}.png")
+    else:
+        figure.savefig(f"{OUT_DIR}/map.png")

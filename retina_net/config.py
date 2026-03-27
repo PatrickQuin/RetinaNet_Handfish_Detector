@@ -8,6 +8,8 @@ NUM_FOLDS = 5 # Number of folds for cross-validation.
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Base Dataset path
+DATASET_PATH = '' # TODO: Add the path to your dataset here
 # Training images and XML files directory.
 TRAIN_DIR = 'data/train'
 # Validation images and XML files directory.
